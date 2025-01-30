@@ -18,6 +18,19 @@ def getFileName():
 
     return createdFile
 
+def sanitiseWebInput(textList): # Used to make the scraped web page look nicer in text form, also prevents crashing from any unexpected emojis/scripts
+    temp1 = ""
+    asciiEncode = str(textList.encode(errors="namereplace")) # Converts to ASCII and replaces all emoji with a text description
+    temp1 = asciiEncode.replace("\\n","\n")
+    temp1 = temp1.replace("\\'","'")
+    temp1 = temp1.replace('\\"','"')
+    temp1 = temp1.replace("\\`","")
+    temp1 = temp1.replace("\\xe2\\x80\\x93","")
+    sanitisedOutput = temp1.replace("\\\\N","")
+
+    return sanitisedOutput
+
+
 def main():
     rerun = ""
     geckodriver_autoinstaller.install() # Check if the current version of geckodriver exists
@@ -27,7 +40,7 @@ def main():
 
 
         driver = webdriver.Firefox() # Opens Firefox instance
-        targetWebsite = input("Enter website to scrape\nNOTE: Enter full URL inclusing https:\\\\\n-->")
+        targetWebsite = input("Enter website to scrape\nNOTE: Enter full URL inclusing https://\n-->")
         driver.get(targetWebsite) # Sends website to Firefox, opens it
         books = driver.find_elements("tag name","body")
         textlist = ""
@@ -42,8 +55,10 @@ def main():
         except:
             print("Text file already exists, opening...")
             file = open(createdFile,"a")
-        file.write(textlist + "\n")
+
+        file.write(sanitiseWebInput(textlist))
         file.close()
+        
         rerun = ""
         while (rerun.lower() != "y" and rerun.lower() != "n"):
             rerun = input("Run program again? [y/n] ")
