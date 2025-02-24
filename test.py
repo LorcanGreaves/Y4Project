@@ -4,6 +4,8 @@ import geckodriver_autoinstaller, sys
 
 __author__ = "Lorcan Greaves <lorcangreaves@gmail.com>"
 
+
+
 def delfile(fileInput):
     open(fileInput,"w").close()
 
@@ -85,6 +87,9 @@ def webWizard():
     targetWebsite = input("#\tEnter the FULL URL of the website you would like to scrape from #\n#\tIf you have changed your mind, please enter \"0\"\t\t\t#\n" + ("#"*73) + "\n>> ")
     if targetWebsite == "0" or targetWebsite == "\"0\"":
         return
+    print("\n" + ("#"*33))
+    print("#\tScraping Website...\t#")
+    print("#"*33)
     driver = webdriver.Firefox() # Opens Firefox instance
     
     fileCreated = False
@@ -96,6 +101,7 @@ def webWizard():
         for i in range(0,len(books)):
             textlist += books[i].text
         
+        driver.quit() # Closes firefox instance
         websiteOption = ""
         fileName = sanitiseWebInput(textlist)
         print("\n" + ("#"*73))
@@ -104,11 +110,14 @@ def webWizard():
         print("#\t\t[1] Yes\t\t#\t\t[2] No\t\t\t#")
         print("#"*73)
 
+        saveasFileOption = False
+
         while websiteOption == "":
             websiteOption = input(">> ")
             match websiteOption:
                 case "1" | "[1]":
                     fileName = createFile(textlist) ##WFH
+                    saveasFileOption = True
                 case "2" | "[2]":
                     break
                 case _:
@@ -124,8 +133,10 @@ def webWizard():
         #    delfile(createdFile)
         #print("Closing Firefox instance...")
 
-        driver.quit() # Closes firefox instance
-        promptWizard(fileCreated,fileName) # Enters standard prompt wizard with web info
+        
+        promptWizard(fileCreated,fileName,saveasFileOption) # Enters standard prompt wizard with web info
+    except "Exiting...":
+        exit()
     except:
         print("\n" + ("#"*73))
         print("#\t\tUnable to access website, exiting\t\t\t#")
@@ -133,8 +144,10 @@ def webWizard():
         driver.quit()
         exit()
 
-def promptWizard(fileFlag:bool=False,fileName:str=""): # Expecting FileName to either contain the name of the created file *or* the contents of the scraped webpage
-    #fileFlag should be true if coming from web wizard
+def promptWizard(fileFlag:bool=False,fileName:str="",isFile:bool=False): # Expecting FileName to contain the contents of a web site or the file with contents saved to it if it came from Web Wizard.
+    # Otherwise fileName should be empty.
+    # fileFlag should be true if coming from web wizard
+    # isFile used to clarify if input is a file or a webpage scrape (Should be true if it's a file)
     print("WIZARD ENTERED") #XX3
 
     if((fileFlag == False) and (fileName == "")): # Did not come from web Wizard
@@ -154,12 +167,27 @@ def promptWizard(fileFlag:bool=False,fileName:str=""): # Expecting FileName to e
     whatSelect = ""
     toneSelectFlag = False
     toneSelect = ""
-    while whoSelectFlag == False:
+    continueFlag = False
+
+
+    while whoSelectFlag == False: # Menu you can go back through
         whoSelectFlag, whoSelect, whoChoice = who()
+        continueFlag = False
+        whatSelectFlag = False
+
         while whatSelectFlag == False:
-            whatSelectFlag, whatSelect = what()
-            while toneSelectFlag == False:
-                toneSelectFlag, toneSelect = tone()
+            whatSelectFlag, whatSelect, continueFlag = what(whoChoice)
+
+            if continueFlag == True:
+                toneSelectFlag = False
+
+                while toneSelectFlag == False:
+                    toneSelectFlag, toneSelect, continueFlag = tone()
+
+                    if continueFlag == False:
+                        whatSelectFlag = False
+            else:
+                whoSelectFlag = False
 
     match whoChoice:
         case 1:
@@ -169,12 +197,12 @@ def promptWizard(fileFlag:bool=False,fileName:str=""): # Expecting FileName to e
         case 3:
             prompt = f"Write a fictional article informing the reader in a {toneSelect} tone about a fictional organisation named '{whoSelect}' in which they {whatSelect}. Use statistics and quotes from other sources where possible. Do not imply at any stage that anything is fictional to the reader."
 
-    if fileFlag == True and (fileName[-3:] == ".txt"): # Reading from file
+    if fileFlag == True and isFile == True: # Reading from file
         with open(fileName,"r") as webPage:
             siteContents = webPage.read().rstrip("\n")
             prompt += f" Use the following article as a template for your article, use information relating to this in your article where possible. {siteContents}"
             webPage.close()
-    elif fileFlag == True and (fileName[-3:] != ".txt"): # Not reading from file
+    elif fileFlag == True and isFile == False: # Not reading from file
         prompt += f" Use the following article as a template for your article, use information relating to this in your article where possible. {fileName}"
 
     print("Your prompt is:")
@@ -182,18 +210,22 @@ def promptWizard(fileFlag:bool=False,fileName:str=""): # Expecting FileName to e
 
     ##XX3 PUT IN WAIT FOR CONTINUE
     checkifServe = ""
+    if(sys.platform.startswith("win")): # Invokes system "Press any key to continue" for windows, less nice "Press enter to continue" on any other system
+        system("pause")
+    else:
+        input("Press enter to continue...\n")
 
     if(sys.platform.startswith("linux")): # Allows for automatic piping into Ollama if already serving Llama3
         print("#"*73)
         print("#\tIs this machine serving Llama3 via Ollama? [y/N]\t\t#")
         print("#"*73)
-        checkifServe = input("--> ")
+        checkifServe = input(">> ")
 
         if str.lower(checkifServe) == "y" or str.lower(checkifServe) == "[y]":
             print("#"*73)
             print("#\tWould you like to run the prompt now? [y/N]\t\t\t#")
             print("#"*73)
-            checkifServe = input("--> ")
+            checkifServe = input(">> ")
             if str.lower(checkifServe) == "y" or str.lower(checkifServe) == "[y]": # Opens Ollama Llama3 and inputs the user's prompt, won't continue until user exits Ollama
                 print("#"*73)
                 print("#\tOpening Ollama, input '/bye' after generation to exit Ollama\t#")
@@ -207,68 +239,83 @@ def promptWizard(fileFlag:bool=False,fileName:str=""): # Expecting FileName to e
 def who():
     perPlaOrg = ""
     whoType = 0
-    print("#"*73)
-    print("#\tWhat is the prompt going to be about?\t\t\t\t#")
-    print("#\tSelect from one of the following options:\t\t\t#")
-    print("#"*73)
-    print("#\t[1] A person\t\t\t#\t[2] A Place\t\t#")
-    print("#\t[3] An organisation\t\t#\t[0] Exit\t\t#")
-    print("#"*73)
     while perPlaOrg == "":
 
-        perPlaOrg = input(">> ")
-
+        whoType = 0
+        print("\n" + ("#"*73))
+        print("#\tWhat is the prompt going to be about?\t\t\t\t#")
+        print("#\tSelect from one of the following options:\t\t\t#")
         print("#"*73)
+        print("#\t[1] A person\t\t\t#\t[2] A Place\t\t#")
+        print("#\t[3] An organisation\t\t#\t[0] Exit\t\t#")
+        print("#"*73)
+        perPlaOrg = input("\n>> ")
 
         match perPlaOrg:
             case "1" | "[1]":
-                # WFH
+                print("\n" + ("#"*73))
                 print("#\tWho will this be about? (Write below)\t\t\t\t#")
-                perPlaOrg = input(("#"*73) + "\n>> ")
+                print("#\tTo go back, please enter \"0\"\t\t\t\t\t#")
+                perPlaOrg = input(("#"*73) + "\n\n>> ")
                 whoType = 1
             case "2" | "[2]":
+                print("\n" + ("#"*73))
                 print("#\tWhere will this be about? (Write below)\t\t\t\t#")
-                perPlaOrg = input(("#"*73) + "\n>> ")
+                print("#\tTo go back, please enter \"0\"\t\t\t\t\t#")
+                perPlaOrg = input(("#"*73) + "\n\n>> ")
                 whoType = 2
             case "3" | "[3]":
+                print("\n" + ("#"*73))
                 print("#\tWhat organisation will this be about? (Write bleow)\t\t\t#")
-                perPlaOrg = input(("#"*73) + "\n>> ")
+                print("#\tTo go back, please enter \"0\"\t\t\t\t\t#")
+                perPlaOrg = input(("#"*73) + "\n\n>> ")
                 whoType = 3
             case "0" | "[0]":
-                print("Exiting...")
-                exit()
+                exit("Exiting...")
             case _:
+                print("\n" + ("#"*73))
                 print("#\tInvalid choice, please select from the provided list\t\t#")
-                print("#"*73)
-                
-        
-        if(perPlaOrg == None):
-            perPlaOrg == ""
+                print("\n" + ("#"*73))
+                perPlaOrg = ""
+
+        if((perPlaOrg == "" or perPlaOrg == None) and whoType != 0):
+            print("\n" + ("#"*73))
             print("#\tInvalid choice, please select from the provided list\t\t#")
+            print("#"*73)
+            perPlaOrg = ""
+
+        if(perPlaOrg == "0" or perPlaOrg == '"0"'):
+            perPlaOrg = ""
 
     return True, perPlaOrg, whoType
 
-def what():
+def what(whoChoice:int=0): # WFH, ADD DIFFERENT QUESTIONS FOR BETTER GRAMMAR
     whatHappen = ""
     print("#"*73)
     print("#\tWhat is happening in relation to them? (Write below)\t\t#")
+    print("#\tTo go back, please enter \"0\"\t\t\t\t\t#")
     print("#"*73)
     while whatHappen == "":
 
-        whatHappen = input(">> ")
+        whatHappen = input("\n>> ")
 
-    return True, whatHappen
+    if(whatHappen == "0" or whatHappen == '\"0\"'):
+        return True, None, False
+    return True, whatHappen, True
 
 def tone():
     toneDesc = ""
     print("#"*73)
     print("#\tWhat sort of tone should the output have? (Write below)\t\t#")
+    print("#\tTo go back, please enter \"0\"\t\t\t\t\t#")
     print("#"*73)
     while toneDesc == "":
-
         toneDesc = input(">> ")
 
-    return True, toneDesc
+    if(toneDesc == "0" or toneDesc == '\"0\"'):
+        return True, None, False
+    
+    return True, toneDesc, True
 
 def main():
     rerun = ""
@@ -280,10 +327,10 @@ def main():
         choiceSelect()
         rerun = ""
 
-        while (rerun.lower() != "y" and rerun.lower() != "n"):
+        while (str.lower(rerun) != "y" and str.lower(rerun) != "n"):
             rerun = input("Run program again? [y/n] ")
 
-    print("\n#############SUCCESSFUL EXIT##################\n")
+    print("\n#############SUCCESSFUL EXIT##################\n") # XX3
 
 
 if(__name__ == "__main__"):
