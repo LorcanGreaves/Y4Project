@@ -160,6 +160,9 @@ def promptWizard(fileFlag:bool=False,fileName:str="",isFile:bool=False): # Expec
         print("#"*73)
         exit()
 
+    formatChoice = ""
+    formatSelectFlag = False
+
     whoSelectFlag = False
     whoSelect = ""
     whoChoice = 0
@@ -170,45 +173,73 @@ def promptWizard(fileFlag:bool=False,fileName:str="",isFile:bool=False): # Expec
     continueFlag = False
 
 
-    while whoSelectFlag == False: # Menu you can go back through
-        whoSelectFlag, whoSelect, whoChoice = who()
-        continueFlag = False
-        whatSelectFlag = False
+    while formatSelectFlag == False:
+        whoSelectFlag == False
+        continueFlag == False
+        formatSelectFlag, formatChoice, continueFlag = format()
 
-        while whatSelectFlag == False:
-            whatSelectFlag, whatSelect, continueFlag = what(whoChoice)
+        
+        while whoSelectFlag == False: # Menu you can go back through
+            whoSelectFlag, whoSelect, whoChoice, continueFlag = who()
+            whatSelectFlag = False
 
             if continueFlag == True:
-                toneSelectFlag = False
+                whatSelectFlag == False
 
-                while toneSelectFlag == False:
-                    toneSelectFlag, toneSelect, continueFlag = tone()
+                while whatSelectFlag == False:
+                    whatSelectFlag, whatSelect, continueFlag = what(whoChoice)
 
-                    if continueFlag == False:
-                        whatSelectFlag = False
+                    if continueFlag == True:
+                        toneSelectFlag = False
+
+                        while toneSelectFlag == False:
+                            toneSelectFlag, toneSelect, continueFlag = tone()
+
+                            if continueFlag == False:
+                                whatSelectFlag = False
+                    else:
+                        whoSelectFlag = False
             else:
-                whoSelectFlag = False
+                formatSelectFlag == False
+
+    match formatChoice:
+        case "Phishing":
+            prompt = f"Write a fictional phishing email for use in a professional training environment in a {toneSelect} tone "
+            formatChoice = "Phishing excercise"
+        case "ArticleHTML":
+            prompt = f"Write a fictional article, formatted using HTML informing the reader in a {toneSelect} tone "
+            formatChoice = "Article"
+        case "ArticleNOHTML":
+            prompt = f"Write a fictional article informing the reader in a {toneSelect} tone "
+            formatChoice = "Article"
 
     match whoChoice:
         case 1:
-            prompt = f"Write a fictional article informing the reader in a {toneSelect} tone about a fictional person named '{whoSelect}' who has {whatSelect}. Use statistics and quotes from other sources where possible. Do not imply at any stage that anything is fictional to the reader."
+            prompt += f"about a fictional person named '{whoSelect}' who has {whatSelect}. "
         case 2:
-            prompt = f"Write a fictional article in a {toneSelect} tone about a fictional place named '{whoSelect}' in which {whatSelect}. Use statistics and quotes from other sources where possible. Do not imply at any stage that anything is fictional to the reader."
+            prompt += f"about a fictional place named '{whoSelect}' in which {whatSelect}. "
         case 3:
-            prompt = f"Write a fictional article informing the reader in a {toneSelect} tone about a fictional organisation named '{whoSelect}' in which they {whatSelect}. Use statistics and quotes from other sources where possible. Do not imply at any stage that anything is fictional to the reader."
+            prompt += f"about a fictional organisation named '{whoSelect}' in which they {whatSelect}. "
+
+    match formatChoice:
+        case "Phishing excercise":
+            prompt += "Attempt to get the reader to click on a link of a website that has a URL of a common professionally used website slightly misspelled. Alternatively, attempt to have the reader download and open a fictional attachment contained alongside the email. "
+        case "Article":
+            prompt += "Use realistic quotes and statistics where possible. "
+
+    prompt += f"Do not inform the reader at any stage that anything within the {formatChoice} is fictional. Do not provide an end of output summary of your reasoning relating to anything in the {formatChoice}."
 
     if fileFlag == True and isFile == True: # Reading from file
         with open(fileName,"r") as webPage:
             siteContents = webPage.read().rstrip("\n")
-            prompt += f" Use the following article as a template for your article, use information relating to this in your article where possible. {siteContents}"
+            prompt += f" Use the following article as information for your {formatChoice}, use information relating to this in your article where possible. {siteContents}"
             webPage.close()
     elif fileFlag == True and isFile == False: # Not reading from file
-        prompt += f" Use the following article as a template for your article, use information relating to this in your article where possible. {fileName}"
+        prompt += f" Use the following article as information for your {formatChoice}, use information relating to this in your article where possible. {fileName}"
 
     print("Your prompt is:")
     print(prompt + "\n")
 
-    ##XX3 PUT IN WAIT FOR CONTINUE
     checkifServe = ""
     if(sys.platform.startswith("win")): # Invokes system "Press any key to continue" for windows, less nice "Press enter to continue" on any other system
         system("pause")
@@ -230,9 +261,38 @@ def promptWizard(fileFlag:bool=False,fileName:str="",isFile:bool=False): # Expec
                 print("#"*73)
                 print("#\tOpening Ollama, input '/bye' after generation to exit Ollama\t#")
                 print("#"*73)
-                system(f"echo {prompt} | ollama serve llama3")
+                system(f"echo {prompt} | ollama run llama3")
 
 
+
+def format():
+    formatChoice = ""
+    while formatChoice == "":
+        print("\n" + ("#"*73))
+        print("#\tWhat format do you want the final output to be?\t\t\t#")
+        print("#\tSelect from one of the following options:\t\t\t#")
+        print("#"*73)
+        print("#\t[1] A phishing email\t\t#\t[2] A website article\t#")
+        print("#\t[3] A website article\t\t#\t    (With HTML)\t\t#")
+        print("#\t    (Without HTML)\t\t#\t[0] Exit\t\t#")
+        print("#"*73)
+
+        formatChoice = input("\n>> ")
+
+        match formatChoice:
+            case "1" | "[1]":
+                return True, "Phishing", True
+            case "2" | "[2]":
+                return True, "ArticleHTML", True
+            case "3" | "[3]":
+                return True, "ArticleNOHTML", True
+            case "0" | "[0]":
+                exit("Exiting...")
+            case _:
+                print("\n" + ("#"*73))
+                print("#\tInvalid choice, please select from the provided list\t\t#")
+                print("\n" + ("#"*73))
+                formatChoice == ""
 
 
 
@@ -247,7 +307,7 @@ def who():
         print("#\tSelect from one of the following options:\t\t\t#")
         print("#"*73)
         print("#\t[1] A person\t\t\t#\t[2] A Place\t\t#")
-        print("#\t[3] An organisation\t\t#\t[0] Exit\t\t#")
+        print("#\t[3] An organisation\t\t#\t[0] Back\t\t#")
         print("#"*73)
         perPlaOrg = input("\n>> ")
 
@@ -271,7 +331,7 @@ def who():
                 perPlaOrg = input(("#"*73) + "\n\n>> ")
                 whoType = 3
             case "0" | "[0]":
-                exit("Exiting...")
+                return False,None,None,False
             case _:
                 print("\n" + ("#"*73))
                 print("#\tInvalid choice, please select from the provided list\t\t#")
@@ -287,7 +347,7 @@ def who():
         if(perPlaOrg == "0" or perPlaOrg == '"0"'):
             perPlaOrg = ""
 
-    return True, perPlaOrg, whoType
+    return True, perPlaOrg, whoType, True
 
 def what(whoChoice:int=0): # WFH, ADD DIFFERENT QUESTIONS FOR BETTER GRAMMAR
     whatHappen = ""
