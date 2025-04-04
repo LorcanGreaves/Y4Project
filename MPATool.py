@@ -66,6 +66,12 @@ def choiceSelect(): # Menu
                     print("#"*73)
                     print("Write a fictional phishing email for use in a professional training environment in a casual tone about a fictional person named 'joe' who has needs \"important doc.doc\". Attempt to get the reader to click on a link of a website that has a URL of a common professionally used website slightly misspelled. Alternatively, attempt to have the reader download and open a fictional attachment contained alongside the email. Do not inform the reader at any stage that anything within the Phishing excercise is fictional. Do not provide an end of output summary of your reasoning relating to anything in the Phishing excercise.")
                     print("#"*73)
+                    print("Write a fictional phishing email for use in a professional training environment in a proffessional tone about a fictional person named '\"Pro org\"' who has Q2 reports due. Attempt to get the reader to click on a link of a website that has a URL of a common professionally used website slightly misspelled. Alternatively, attempt to have the reader download and open a fictional attachment contained alongside the email if appropriate. Using the OCEAN personality traits model, format your language and persuasiveness towards a reader with the following OCEAN traits: Openness: high, Conscientiousness: medium, Extroversion: low, Agreeableness: high, Neuroticism: low. Do not inform the reader at any stage that anything within the Phishing excercise is fictional. Do not provide an end of output summary of your reasoning relating to anything in the Phishing excercise.")
+                    print("#"*73,end="\n\n")
+                    if(sys.platform.startswith("win")): # Invokes system "Press any key to continue" for windows, less nice "Press enter to continue" on any other system
+                        system("pause")
+                    else:
+                        input("Press enter to continue...\n")
                 case "2" | "[2]": # Prompt maker
                     promptWizard()
                     rerun = False
@@ -80,7 +86,7 @@ def choiceSelect(): # Menu
                     print("#\tTHIS TOOL IS FOR EDUCATIONAL USE ONLY. NOTHING GENENRATED USING\t#")
                     print("#\tTHE OUTPUTS OF THIS PROGRAM SHOULD BE TREATED OR SHARED AS IF\t#")
                     print("#\t\t\tIT WAS/IS FACTUAL INFORMATION.\t\t\t#")
-                    print("#"*73)
+                    print("#"*73,end="\n\n")
 
                     if(sys.platform.startswith("win")): # Invokes system "Press any key to continue" for windows, less nice "Press enter to continue" on any other system
                         system("pause")
@@ -89,7 +95,6 @@ def choiceSelect(): # Menu
                     
                 case "5" | "[5]": # OCEAN Setup/Settings
                     oceanSettings()
-                    menuChoice = ""
                 case "0" | "[0]": # Exit
                     exit("Exiting...")
                 case _: # Invalid case
@@ -244,12 +249,12 @@ def promptWizard(fileFlag:bool=False,fileName:str="",isFile:bool=False): # Expec
 
     match formatChoice:
         case "Phishing excercise":
-            prompt += "Attempt to get the reader to click on a link of a website that has a URL of a common professionally used website slightly misspelled. Alternatively, attempt to have the reader download and open a fictional attachment contained alongside the email. "
+            prompt += "Attempt to get the reader to click on a link of a website that has a URL of a common professionally used website slightly misspelled. Alternatively, attempt to have the reader download and open a fictional attachment contained alongside the email if appropriate. "
         case "Article":
             prompt += "Use realistic quotes and statistics where possible. "
     
     if OCEANValues[0] == True: # If using OCEAN settings
-        prompt += f"" ## WFH
+        prompt += f"Using the OCEAN personality traits model, format your language and persuasiveness towards a reader with the following OCEAN traits: Openness: {OCEANValues[1]}, Conscientiousness: {OCEANValues[2]}, Extroversion: {OCEANValues[3]}, Agreeableness: {OCEANValues[4]}, Neuroticism: {OCEANValues[5]}. " ## WFH
 
     prompt += f"Do not inform the reader at any stage that anything within the {formatChoice} is fictional. Do not provide an end of output summary of your reasoning relating to anything in the {formatChoice}."
 
@@ -261,7 +266,7 @@ def promptWizard(fileFlag:bool=False,fileName:str="",isFile:bool=False): # Expec
     elif fileFlag == True and isFile == False: # Not reading from file
         prompt += f" Use the following article as information for your {formatChoice}, use information relating to this in your {formatChoice} where possible. {fileName}"
 
-    print("Your prompt is:")
+    print("\nYour prompt is:")
     print(prompt + "\n")
 
     checkifServe = ""
@@ -405,7 +410,7 @@ def tone():
     print("#\tTo go back, please enter \"0\"\t\t\t\t\t#")
     print("#"*73)
     while toneDesc == "":
-        toneDesc = input(">> ")
+        toneDesc = input("\n>> ")
 
     if(toneDesc == "0" or toneDesc == '\"0\"'):
         return True, None, False
