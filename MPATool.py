@@ -253,12 +253,6 @@ def webWizard():
                     print("#"*73)
 
         fileCreated = True
-
-        #delete = input("Wipe created file? [y/n] ") #XX3
-        #if (delete == "y"):
-        #    delfile(createdFile)
-        #print("Closing Firefox instance...")
-
         
         promptWizard(fileCreated,fileName,saveasFileOption) # Enters standard prompt wizard with web info
     except "Exiting...":
@@ -274,7 +268,6 @@ def promptWizard(fileFlag:bool=False,fileName:str="",isFile:bool=False): # Expec
     # Otherwise fileName should be empty.
     # fileFlag should be true if coming from web wizard
     # isFile used to clarify if input is a file or a webpage scrape (Should be true if it's a file)
-    #print("WIZARD ENTERED") #XX3
 
     if((fileFlag == False) and (fileName == "")): # Did not come from web Wizard
         #print("No web") # XX3
@@ -820,7 +813,7 @@ def main():
         while (str.lower(rerun) != "y" and str.lower(rerun) != "n"):
             rerun = input("Run program again? [y/n] ")
 
-    print("\n#############SUCCESSFUL EXIT##################\n") # XX3
+    print("\n#############SUCCESSFUL EXIT##################\n")
 
 
 if(__name__ == "__main__"):
